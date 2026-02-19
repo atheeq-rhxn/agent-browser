@@ -15,10 +15,10 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
-    "@browser-agent/backend": "workspace:*",
-    "@browser-agent/env": "workspace:*",
     "@convex-dev/better-auth": "catalog:",
     "@hookform/resolvers": "^5.1.1",
+    "@browser-agent/backend": "workspace:*",
+    "@browser-agent/env": "workspace:*",
     "@tailwindcss/vite": "^4.0.15",
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-router": "^1.141.1",
