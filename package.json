@@ -15,7 +15,8 @@
       "better-auth": "1.4.9",
       "@convex-dev/better-auth": "^0.10.9",
       "@tanstack/react-form": "^1.28.0",
-      "@better-auth/expo": "1.4.9"
+      "@better-auth/expo": "1.4.9",
+      "@types/node": "^22.13.14"
     }
   },
   "type": "module",

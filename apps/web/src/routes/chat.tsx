@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ChatContainer } from "../components/chat/chat-container";
+import { ProfessionalChat } from "../components/chat/professional-chat";
 
 export const Route = createFileRoute("/chat")({
   component: ChatPage,
 });
 
 function ChatPage() {
-  return <ChatContainer />;
+  return <ProfessionalChat />;
 }

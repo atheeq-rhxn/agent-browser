@@ -11,7 +11,7 @@ import { AppThemeProvider } from "@/contexts/app-theme-context";
 import { authClient } from "@/lib/auth-client";
 
 export const unstable_settings = {
-  initialRouteName: "(drawer)",
+  initialRouteName: "chat",
 };
 
 const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
