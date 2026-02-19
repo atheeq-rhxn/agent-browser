@@ -1,10 +1,10 @@
-import { View } from "react-native";
-import { ChatContainer } from "../../components/chat/chat-container";
+import { View } from "react-native"
+import { ProfessionalChatNative } from "../../components/chat/professional-chat-native"
 
 export default function ChatScreen() {
   return (
     <View className="flex-1">
-      <ChatContainer />
+      <ProfessionalChatNative />
     </View>
-  );
+  )
 }
