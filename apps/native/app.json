@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "scheme": "browser-agent",
+    "userInterfaceStyle": "automatic",
+    "orientation": "default",
+    "web": {
+      "bundler": "metro"
+    },
+    "name": "browser-agent",
+    "slug": "browser-agent",
+    "plugins": ["expo-font"],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

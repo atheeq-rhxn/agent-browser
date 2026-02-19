@@ -1,0 +1,3 @@
+{
+  "extends": "@browser-agent/config/tsconfig.base.json"
+}
