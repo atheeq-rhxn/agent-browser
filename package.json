@@ -4,7 +4,8 @@
   "workspaces": {
     "packages": [
       "apps/*",
-      "packages/*"
+      "packages/*",
+      "services/agent-service"
     ],
     "catalog": {
       "dotenv": "^17.2.2",
