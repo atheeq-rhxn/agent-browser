@@ -173,7 +173,7 @@ export function ChatContainer() {
           <Menu size={24} color="#666" />
         </TouchableOpacity>
         <Text className="flex-1 text-lg font-semibold text-foreground">
-          {currentConversation?.title || "ChatGPT"}
+          {currentConversation?.title || "DIVINE"}
         </Text>
       </View>
 

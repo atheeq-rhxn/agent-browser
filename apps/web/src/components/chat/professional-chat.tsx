@@ -39,13 +39,6 @@ const mockResponses = [
   "This is an interesting topic. Let me break it down for you step by step to make it easier to understand.",
 ]
 
-const suggestions = [
-  "Explain a complex concept",
-  "Help me write code",
-  "Brainstorm creative ideas",
-  "Analyze a problem",
-]
-
 export function ProfessionalChat() {
   const [currentChatId, setCurrentChatId] = useState<Id<"chats"> | null>(null)
   const [messages, setMessages] = useState<MessageType[]>([])
@@ -300,22 +293,9 @@ export function ProfessionalChat() {
                 <Sparkles className="h-10 w-10 text-purple-500" />
               </div>
               <h2 className="mb-3 text-3xl font-semibold">How can I help you today?</h2>
-              <p className="mb-8 text-center text-muted-foreground">
-                Choose a suggestion below or start typing your question
+              <p className="text-center text-muted-foreground">
+                Start typing your message below
               </p>
-              <div className="grid w-full max-w-2xl gap-3 sm:grid-cols-2">
-                {suggestions.map((suggestion, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleSubmit(suggestion)}
-                    className="group rounded-2xl border bg-card p-4 text-left transition-all hover:border-primary/50 hover:bg-accent hover:shadow-md"
-                  >
-                    <div className="font-medium transition-colors group-hover:text-primary">
-                      {suggestion}
-                    </div>
-                  </button>
-                ))}
-              </div>
             </div>
           ) : (
             <div className="mx-auto max-w-3xl px-4 py-8">

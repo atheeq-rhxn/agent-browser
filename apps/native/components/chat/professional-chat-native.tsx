@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback } from "react"
 import {
   View,
   Text,
@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal,
-  Animated,
 } from "react-native"
 import { nanoid } from "nanoid"
 import {
@@ -24,9 +23,6 @@ import {
   Send,
   Menu,
 } from "lucide-react-native"
-import { useMutation, useQuery } from "convex/react"
-import { api } from "@browser-agent/backend/convex/_generated/api"
-import type { Id } from "@browser-agent/backend/convex/_generated/dataModel"
 
 interface MessageVersion {
   id: string
@@ -39,48 +35,28 @@ interface MessageType {
   versions: MessageVersion[]
 }
 
+interface Chat {
+  id: string
+  title: string
+  messages: MessageType[]
+}
+
 const mockResponses = [
   "That's a great question! Let me help you understand this concept better. The key thing to remember is that proper implementation requires careful consideration of the underlying principles.",
   "I'd be happy to explain this topic in detail. From my understanding, there are several important factors to consider when approaching this problem.",
   "This is an interesting topic. Let me break it down for you step by step to make it easier to understand.",
 ]
 
-const suggestions = [
-  "Explain a complex concept",
-  "Help me write code",
-  "Brainstorm creative ideas",
-  "Analyze a problem",
-]
-
 export function ProfessionalChatNative() {
-  const [currentChatId, setCurrentChatId] = useState<Id<"chats"> | null>(null)
+  const [chats, setChats] = useState<Chat[]>([])
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null)
   const [messages, setMessages] = useState<MessageType[]>([])
   const [status, setStatus] = useState<"submitted" | "streaming" | "ready">("ready")
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null)
   const [sidebarVisible, setSidebarVisible] = useState(false)
   const [inputValue, setInputValue] = useState("")
 
-  const chats = useQuery(api.chats.list) || []
-  const currentChat = useQuery(
-    api.chats.get,
-    currentChatId ? { chatId: currentChatId } : "skip"
-  )
-  const createChat = useMutation(api.chats.create)
-  const deleteChat = useMutation(api.chats.deleteChat)
-  const addMessage = useMutation(api.chats.addMessage)
-
-  useEffect(() => {
-    if (currentChat?.messages) {
-      const loadedMessages: MessageType[] = currentChat.messages.map(msg => ({
-        key: msg._id,
-        role: msg.role,
-        versions: [{ id: msg._id, content: msg.content }],
-      }))
-      setMessages(loadedMessages)
-    } else {
-      setMessages([])
-    }
-  }, [currentChat])
+  const currentChat = chats.find(chat => chat.id === currentChatId)
 
   const streamResponse = useCallback(async (messageId: string, content: string) => {
     setStatus("streaming")
@@ -111,26 +87,33 @@ export function ProfessionalChatNative() {
     return currentContent
   }, [])
 
-  const handleNewChat = async () => {
-    try {
-      const newChatId = await createChat({ title: "New Chat" })
-      setCurrentChatId(newChatId as Id<"chats">)
+  const handleNewChat = () => {
+    const newChatId = nanoid()
+    const newChat: Chat = {
+      id: newChatId,
+      title: "New Chat",
+      messages: [],
+    }
+    setChats(prev => [newChat, ...prev])
+    setCurrentChatId(newChatId)
+    setMessages([])
+    setSidebarVisible(false)
+  }
+
+  const handleDeleteChat = (chatId: string) => {
+    setChats(prev => prev.filter(chat => chat.id !== chatId))
+    if (currentChatId === chatId) {
+      setCurrentChatId(null)
       setMessages([])
-      setSidebarVisible(false)
-    } catch (error) {
-      console.error("Failed to create chat")
     }
   }
 
-  const handleDeleteChat = async (chatId: Id<"chats">) => {
-    try {
-      await deleteChat({ chatId })
-      if (currentChatId === chatId) {
-        setCurrentChatId(null)
-        setMessages([])
-      }
-    } catch (error) {
-      console.error("Failed to delete chat")
+  const handleSelectChat = (chatId: string) => {
+    const chat = chats.find(c => c.id === chatId)
+    if (chat) {
+      setCurrentChatId(chatId)
+      setMessages(chat.messages)
+      setSidebarVisible(false)
     }
   }
 
@@ -140,15 +123,16 @@ export function ProfessionalChatNative() {
 
       let chatId = currentChatId
 
+      // Create new chat if none exists
       if (!chatId) {
-        try {
-          const newChatId = await createChat({ title: text.slice(0, 50) })
-          chatId = newChatId as Id<"chats">
-          setCurrentChatId(chatId)
-        } catch (error) {
-          console.error("Failed to create chat")
-          return
+        chatId = nanoid()
+        const newChat: Chat = {
+          id: chatId,
+          title: text.slice(0, 50),
+          messages: [],
         }
+        setChats(prev => [newChat, ...prev])
+        setCurrentChatId(chatId)
       }
 
       setStatus("submitted")
@@ -160,17 +144,16 @@ export function ProfessionalChatNative() {
         role: "user",
         versions: [{ id: userMessageKey, content: text }],
       }
-      setMessages(prev => [...prev, userMessage])
+      
+      const newMessages = [...messages, userMessage]
+      setMessages(newMessages)
 
-      try {
-        await addMessage({
-          chatId,
-          role: "user",
-          content: text,
-        })
-      } catch (error) {
-        console.error("Failed to save message")
-      }
+      // Update chat in state
+      setChats(prev =>
+        prev.map(chat =>
+          chat.id === chatId ? { ...chat, messages: newMessages } : chat
+        )
+      )
 
       setTimeout(async () => {
         const assistantMessageId = nanoid()
@@ -180,24 +163,33 @@ export function ProfessionalChatNative() {
           role: "assistant",
           versions: [{ id: assistantMessageId, content: "" }],
         }
-        setMessages(prev => [...prev, assistantMessage])
+        
+        const messagesWithAssistant = [...newMessages, assistantMessage]
+        setMessages(messagesWithAssistant)
 
         const fullResponse = await streamResponse(assistantMessageId, randomResponse)
 
-        if (chatId) {
-          try {
-            await addMessage({
-              chatId,
-              role: "assistant",
-              content: fullResponse,
-            })
-          } catch (error) {
-            console.error("Failed to save response")
-          }
-        }
+        // Update assistant message with full response
+        const finalMessages = messagesWithAssistant.map(msg =>
+          msg.key === assistantMessageId
+            ? {
+                ...msg,
+                versions: [{ id: assistantMessageId, content: fullResponse }],
+              }
+            : msg
+        )
+
+        setMessages(finalMessages)
+        
+        // Update chat in state
+        setChats(prev =>
+          prev.map(chat =>
+            chat.id === chatId ? { ...chat, messages: finalMessages } : chat
+          )
+        )
       }, 500)
     },
-    [currentChatId, createChat, addMessage, streamResponse]
+    [currentChatId, messages, streamResponse]
   )
 
   return (
@@ -258,13 +250,10 @@ export function ProfessionalChatNative() {
               <View className="gap-1">
                 {chats.map(chat => (
                   <TouchableOpacity
-                    key={chat._id}
-                    onPress={() => {
-                      setCurrentChatId(chat._id as Id<"chats">)
-                      setSidebarVisible(false)
-                    }}
+                    key={chat.id}
+                    onPress={() => handleSelectChat(chat.id)}
                     className={`flex-row items-center gap-3 rounded-2xl px-3 py-3 ${
-                      currentChatId === chat._id ? "bg-accent" : ""
+                      currentChatId === chat.id ? "bg-accent" : ""
                     }`}
                   >
                     <MessageSquare size={18} color="#666" />
@@ -274,7 +263,7 @@ export function ProfessionalChatNative() {
                     <TouchableOpacity
                       onPress={e => {
                         e.stopPropagation()
-                        handleDeleteChat(chat._id as Id<"chats">)
+                        handleDeleteChat(chat.id)
                       }}
                       className="rounded-lg p-1"
                     >
@@ -298,20 +287,9 @@ export function ProfessionalChatNative() {
             <Text className="mb-2 text-center text-2xl font-semibold text-foreground">
               How can I help you today?
             </Text>
-            <Text className="mb-6 text-center text-muted-foreground">
-              Choose a suggestion below or start typing
+            <Text className="text-center text-muted-foreground">
+              Start typing your message below
             </Text>
-            <View className="w-full gap-3">
-              {suggestions.map((suggestion, i) => (
-                <TouchableOpacity
-                  key={i}
-                  onPress={() => handleSubmit(suggestion)}
-                  className="rounded-2xl border border-border bg-card p-4"
-                >
-                  <Text className="font-medium text-foreground">{suggestion}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
           </View>
         ) : (
           <View className="px-4 py-6">

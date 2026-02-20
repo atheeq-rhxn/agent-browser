@@ -8,10 +8,15 @@
     },
     "name": "browser-agent",
     "slug": "browser-agent",
-    "plugins": ["expo-font"],
+    "plugins": [
+      "expo-font"
+    ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "android": {
+      "package": "com.anonymous.browseragent"
     }
   }
 }
